@@ -4,51 +4,48 @@ from collections import defaultdict
 
 
 def parse(lines):
-    m = defaultdict(bool)
-    m['w'] = len(lines[0])
-    m['h'] = len(lines)
-    for y in range(m['h']):
+    cells = defaultdict(bool)
+    w = len(lines[0])
+    h = len(lines)
+    for y in range(h):
         row = lines[y]
-        for x in range(m['w']):
+        for x in range(w):
             c = row[x]
             if c == '#':
-                m[(x, y)] = True
-    return m
+                cells[(x, y)] = True
+    return (w, h, cells)
 
 
-def solve_1(grid):
+def solve_1(w, h, cells):
     history = set()
     while True:
-        add_to_history(history, grid)
-        grid = step(grid)
-        if is_in_history(history, grid):
+        add_to_history(history, cells)
+        cells = step(w, h, cells)
+        if is_in_history(history, cells):
             break
-    return biodiversity_rating(grid)
+    return biodiversity_rating(w, h, cells)
 
 
-def add_to_history(history, grid):
-    cells = sorted_cells(grid)
-    history.add(cells)
+def add_to_history(history, cells):
+    cell_items = sorted_items(cells)
+    history.add(cell_items)
 
 
-def is_in_history(history, grid):
-    cells = sorted_cells(grid)
-    return cells in history
+def is_in_history(history, cells):
+    cell_items = sorted_items(cells)
+    return cell_items in history
 
 
-def sorted_cells(grid):
-    cells = [(a, b) for (a, b) in grid.items() if (a != 'w' and a != 'h')]
-    return tuple(sorted(cells))
+def sorted_items(cells):
+    return tuple(sorted(cells.items()))
 
 
-def step(grid):
+def step(w, h, cells):
     result = defaultdict(bool)
-    result['w'] = grid['w']
-    result['h'] = grid['h']
-    for y in range(grid['h']):
-        for x in range(grid['w']):
-            bug = grid[(x, y)]
-            ns = neighbors(grid, (x, y))
+    for y in range(h):
+        for x in range(w):
+            bug = cells[(x, y)]
+            ns = neighbors(cells, (x, y))
             n = nb_alive(ns)
             if bug and n == 1:
                 result[(x, y)] = True
@@ -57,11 +54,11 @@ def step(grid):
     return result
 
 
-def neighbors(grid, cell):
+def neighbors(cells, cell):
     result = []
     (x, y) = cell
     for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)]:
-        result.append(grid[(x+dx, y+dy)])
+        result.append(cells[(x+dx, y+dy)])
     return result
 
 
@@ -69,16 +66,16 @@ def nb_alive(ns):
     return len([x for x in ns if x])
 
 
-def biodiversity_rating(grid):
+def biodiversity_rating(w, h, cells):
     result = 0
-    for y in range(grid['h']):
-        for x in range(grid['w']):
-            if grid[(x, y)]:
-                result += pow(2, x + grid['w']*y)
+    for y in range(h):
+        for x in range(w):
+            if cells[(x, y)]:
+                result += pow(2, x + w*y)
     return result
 
 
 if __name__ == '__main__' and not sys.flags.interactive:
     lines = [line.strip() for line in fileinput.input()]
-    grid = parse(lines)
-    print(solve_1(grid))
+    (w, h, cells) = parse(lines)
+    print(solve_1(w, h, cells))
